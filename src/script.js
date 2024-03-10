@@ -17,6 +17,11 @@ const gutterTerrainDisplacement = textureLoader.load('textures/gutter_displaceme
 // Scene
 const scene = new THREE.Scene();
 
+// Add some fog to the back of the scene
+const fog = new THREE.Fog("#4205fa", 1, 2.5);
+scene.fog = fog;
+
+
 // Objects
 /**
  * Here I use a Plane Geometry of width 1 and height 2
@@ -39,7 +44,15 @@ plane.rotation.x = -Math.PI * 0.5;
 plane.position.y = 0.0;
 plane.position.z = 0.15;
 
+// copy of the plane for infinity cycle:
+const plane2 = new THREE.Mesh(geometry, material);
+plane2.rotation.x = -Math.PI * 0.5;
+plane2.position.y = 0.0;
+plane2.position.z = -1.85; // 0.15 - 2 (the length of the first plane)
+
 scene.add(plane);
+// add the second copy to the scene
+scene.add(plane2);
 
 // Sizes
 const sizes = {
@@ -95,10 +108,23 @@ window.addEventListener("resize", () => {
 	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
+const clock = new THREE.Clock();
+
 // Animate: we call this tick function on every frame
 const tick = () => {
+
+    // get the time since the scene rendered from the clock
+    const elapsedTime = clock.getElapsedTime();
+
 	// Update controls
-	controls.update();
+    controls.update();
+
+    // infinity cycle:
+    // copy the plane technique 
+    // when the first plane reaches z = 2 we reset that plan to 0
+    plane.position.z = (elapsedTime * 0.15) % 2
+
+    plane2.position.z = ((elapsedTime * 0.15) % 2) - 2;
 
 	// Update the rendered scene
 	renderer.render(scene, camera);
