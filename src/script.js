@@ -14,11 +14,13 @@ const gridTexture = textureLoader.load('textures/grid.png');
 
 const gutterTerrainDisplacement = textureLoader.load('textures/gutter_displacement.png');
 
+// const metalnessNormalMap = textureLoader.load('textures/metalness.png');
+
 // Scene
 const scene = new THREE.Scene();
 
 // Add some fog to the back of the scene
-const fog = new THREE.Fog("#4205fa", 1, 2.5);
+const fog = new THREE.Fog("#4205fa", 0, 1.5);
 scene.fog = fog;
 
 
@@ -30,15 +32,29 @@ scene.fog = fog;
  */
 const geometry = new THREE.PlaneGeometry(1, 2, 24, 24);
 const material = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    map: gridTexture,
-    displacementMap: gutterTerrainDisplacement,
-    displacementScale: 0.4
+	color: 0xffffff,
+	map: gridTexture,
+	displacementMap: gutterTerrainDisplacement,
+	displacementScale: 0.6,
 });
 
 
-const plane = new THREE.Mesh(geometry, material);
+const obstacleGeometry = new THREE.ConeGeometry(0.2, 0.26, 5 );
+const coneMaterial = new THREE.MeshStandardMaterial({
+	color: 0x00ffff,
+	roughness: 0.25,
+    map: gridTexture,
+});
 
+const cone = new THREE.Mesh(obstacleGeometry, coneMaterial);
+cone.position.x = 0;
+cone.position.y = 0.0;
+cone.position.z = 0;
+
+scene.add(cone);
+
+
+const plane = new THREE.Mesh(geometry, material);
 // Here we position our plane flat in front of the camera
 plane.rotation.x = -Math.PI * 0.5;
 plane.position.y = 0.0;
@@ -50,6 +66,7 @@ plane2.rotation.x = -Math.PI * 0.5;
 plane2.position.y = 0.0;
 plane2.position.z = -1.85; // 0.15 - 2 (the length of the first plane)
 
+
 scene.add(plane);
 // add the second copy to the scene
 scene.add(plane2);
@@ -60,8 +77,27 @@ const sizes = {
 	height: window.innerHeight,
 };
 
-const ambientLight = new THREE.AmbientLight("#ffffff", 10);
+const ambientLight = new THREE.AmbientLight("#40cf8c", 10);
 scene.add(ambientLight);
+
+// Adds two spot lights
+const spotlightLeft = new THREE.SpotLight('#2d9ffc', 80, 15, Math.PI * 0.1, 0.25);
+spotlightLeft.position.set(0.5, 0.75, 2.2);
+spotlightLeft.target.position.x = -1;
+spotlightLeft.target.position.y = 0.25;
+spotlightLeft.target.position.z = 0.25;
+scene.add(spotlightLeft);
+scene.add(spotlightLeft.target);
+
+const spotlightRight = new THREE.SpotLight("#2dfc87", 90, 15, Math.PI * 0.1, 0.25);
+spotlightRight.position.set(-0.5, 0.75, 2.2);
+spotlightRight.target.position.x = 1;
+spotlightRight.target.position.y = 0.25;
+spotlightRight.target.position.z = 0.25;
+scene.add(spotlightRight);
+scene.add(spotlightRight.target);
+
+
 
 // Camera
 const camera = new THREE.PerspectiveCamera(
@@ -123,11 +159,13 @@ const tick = () => {
     // copy the plane technique 
     // when the first plane reaches z = 2 we reset that plan to 0
     plane.position.z = (elapsedTime * 0.15) % 2
+    cone.position.z = (elapsedTime * 0.15) % 2;
 
     plane2.position.z = ((elapsedTime * 0.15) % 2) - 2;
 
 	// Update the rendered scene
 	renderer.render(scene, camera);
+    
 
 	// Call tick again on the next frame
 	window.requestAnimationFrame(tick);
